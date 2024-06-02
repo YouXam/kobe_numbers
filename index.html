@@ -110,7 +110,7 @@
         document.getElementById('textsize').value = '2em';
         document.getElementById('parleading').value = '4em';
         document.getElementById('typst').addEventListener('load', async function () {
-            const templateReq = await fetch('/kobe_numbers.typ')
+            const templateReq = await fetch('kobe_numbers.typ')
             const template = (await templateReq.text())
                 .replaceAll(`H("kobe`, `H("/kobe`);
 
