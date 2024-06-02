@@ -2,6 +2,8 @@
 
 让你的数字变成牢大！
 
+可以在 [这里](https://youxam.github.io/kobe_numbers/) 查看效果。
+
 ## 效果
 
 对于数字 `100`：
