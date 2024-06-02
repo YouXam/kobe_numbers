@@ -77,8 +77,9 @@
 
 <body>
     <div id="content">
-        <div style="height: 305px; display: flex; justify-content: center; align-items: center; font-size: 2em;">
-            <span>Loading...</span>
+        <div style="height: 305px; display: flex; flex-direction: column;justify-content: center; align-items: center; font-size: 2em;">
+            <div>加载中...</div>
+            <div style="font-size: 0.7em; margin-top: 20px;">首次加载可能需要较长时间</div>
         </div>
     </div>
     <div id="form">
@@ -94,12 +95,12 @@
             </div>
         </div>
         <textarea id="input"></textarea>
-        <button id="compile">Generate</button>
-        <button id="download">Download PNG</button>
-        <button id="downloadt">Download PNG (Transparent)</button>
+        <button id="compile">生成</button>
+        <button id="download">下载 png</button>
+        <button id="downloadt">下载 png (透明背景)</button>
     </div>
     <footer style="text-align: center; margin-top: 100px;">
-        <div>See <a href="https://typst.app/docs" target="_blank">Typst Documentation</a> for more information.</div>
+         <div>查看 <a href="https://typst.app/docs" target="_blank">Typst 文档</a> 以获取更多信息。</div>
         <div style="margin-top: 10px;">GitHub: <a href="https://github.com/YouXam/kobe_numbers"
                 target="_blank">YouXam/kobe_numbers</a></div>
     </footer>
@@ -107,7 +108,7 @@
         const input = document.getElementById('input');
         input.value = '#set align(center)\n123';
         document.getElementById('pagewidth').value = '30cm';
-        document.getElementById('textsize').value = '2em';
+        document.getElementById('textsize').value = '3em';
         document.getElementById('parleading').value = '4em';
         document.getElementById('typst').addEventListener('load', async function () {
             const templateReq = await fetch('kobe_numbers.typ')
@@ -115,7 +116,8 @@
                 .replaceAll(`H("kobe`, `H("/kobe`);
 
             const cm = window.TypstCompileModule;
-            const fetchBackend = new cm.FetchAccessModel('/kobe_numbers');
+            
+            const fetchBackend = new cm.FetchAccessModel(location.pathname);
             $typst.use(TypstSnippet.withAccessModel(fetchBackend));
 
             $typst.setCompilerInitOptions({
@@ -164,10 +166,16 @@
                 const img = new Image();
                 img.onload = function () {
                     ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-                    const a = document.createElement('a');
-                    a.href = canvas.toDataURL('image/png');
-                    a.download = 'kobe_numbers.png';
-                    a.click();
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'kobe_numbers.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 'image/png');
                 };
                 img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
             }
