@@ -150,7 +150,10 @@
                 const svgElement = document.querySelector('svg');
                 const svg = (new XMLSerializer).serializeToString(svgElement);
 
-                const scale = 10; 
+                const originalWidth = svgElement.width.baseVal.value;
+                const originalHeight = svgElement.height.baseVal.value;
+    
+                let scale = Math.min(10, Math.floor(Math.sqrt(16777216 / (originalWidth * originalHeight))));
                 const canvasWidth = svgElement.width.baseVal.value * scale;
                 const canvasHeight = svgElement.height.baseVal.value * scale;
 
