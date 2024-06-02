@@ -115,7 +115,7 @@
                 .replaceAll(`H("kobe`, `H("/kobe`);
 
             const cm = window.TypstCompileModule;
-            const fetchBackend = new cm.FetchAccessModel('');
+            const fetchBackend = new cm.FetchAccessModel('/kobe_numbers');
             $typst.use(TypstSnippet.withAccessModel(fetchBackend));
 
             $typst.setCompilerInitOptions({
