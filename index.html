@@ -167,7 +167,7 @@
                 img.onload = function () {
                     ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
                     canvas.toBlob((blob) => {
-                        const url = URL.createObjectURL(blob);
+                        const url = URL.createObjectURL(blob, { type: 'image/png' });
                         const a = document.createElement('a');
                         a.href = url;
                         a.download = 'kobe_numbers.png';
