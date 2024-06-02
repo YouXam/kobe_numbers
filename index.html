@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kobe Numbers</title>
+    <script type="module" src="https://unpkg.com/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js"
+        id="typst"></script>
+    <style>
+        #content {
+            width: 100%;
+            top: 0;
+            display: flex;
+            margin: 100px 0px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #content .typst-doc {
+            border-radius: 5px;
+            border: 0.5px solid gray;
+        }
+
+        #input {
+            font-size: 1em;
+            font-family: monospace;
+            resize: none;
+            overflow: hidden;
+            height: 7.5em;
+            width: 80%;
+            padding: 10px;
+            border-radius: 5px;
+            appearance: none;
+            border: 1px solid gray;
+            margin-top: 3px;
+        }
+
+        #form {
+            font-size: 1em;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 100px;
+        }
+
+        input {
+            font-size: 1em;
+            font-family: monospace;
+            resize: none;
+            overflow: hidden;
+            width: 5ch;
+            padding: 5px;
+            border-radius: 5px;
+            appearance: none;
+            margin: 0px 10px;
+            border: 1px solid gray;
+            margin: 3px 0px;
+        }
+
+
+        button {
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 5px;
+            appearance: none;
+            border: 1px solid gray;
+            margin: 5px 0px;
+            cursor: pointer;
+            width: calc(80% + 20px);
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <div style="height: 305px; display: flex; justify-content: center; align-items: center; font-size: 2em;">
+            <span>Loading...</span>
+        </div>
+    </div>
+    <div id="form">
+        <div style="width: 80%">
+            <div>
+                <code>#set page(height: auto, width: <input id="pagewidth"/>)</code>
+            </div>
+            <div>
+                <code>#set text(size: <input id="textsize"/>)</code>
+            </div>
+            <div>
+                <code>#set par(leading: <input id="parleading"/>)</code>
+            </div>
+        </div>
+        <textarea id="input"></textarea>
+        <button id="compile">Generate</button>
+        <button id="download">Download PNG</button>
+        <button id="downloadt">Download PNG (Transparent)</button>
+    </div>
+    <footer style="text-align: center; margin-top: 100px;">
+        <div>See <a href="https://typst.app/docs" target="_blank">Typst Documentation</a> for more information.</div>
+        <div style="margin-top: 10px;">GitHub: <a href="https://github.com/YouXam/kobe_numbers"
+                target="_blank">YouXam/kobe_numbers</a></div>
+    </footer>
+    <script>
+        const input = document.getElementById('input');
+        input.value = '#set align(center)\n123';
+        document.getElementById('pagewidth').value = '30cm';
+        document.getElementById('textsize').value = '2em';
+        document.getElementById('parleading').value = '4em';
+        document.getElementById('typst').addEventListener('load', async function () {
+            const templateReq = await fetch('/kobe_numbers.typ')
+            const template = (await templateReq.text())
+                .replaceAll(`H("kobe`, `H("/kobe`);
+
+            const cm = window.TypstCompileModule;
+            const fetchBackend = new cm.FetchAccessModel('');
+            $typst.use(TypstSnippet.withAccessModel(fetchBackend));
+
+            $typst.setCompilerInitOptions({
+                getModule: () =>
+                    'https://unpkg.com/@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm',
+            });
+            $typst.setRendererInitOptions({
+                getModule: () =>
+                    'https://unpkg.com/@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm',
+            });
+            const compile = function (mainContent) {
+                const pageWidth = document.getElementById('pagewidth').value;
+                const textSize = document.getElementById('textsize').value;
+                const parLeading = document.getElementById('parleading').value;
+                $typst.svg({
+                    mainContent: template + `\n\n#show: kobe_numbers
+                    #set page(height: auto, width: ${pageWidth}, margin: 2in)
+                    #set par(leading: ${parLeading})
+                    #set text(size: ${textSize})
+                    ` + mainContent
+                }).then(svg => {
+                    document.getElementById('content').innerHTML = svg;
+                });
+            };
+            input.oninput = () => {
+                const lines = input.value.split('\n');
+                input.style.height = Math.max(5, lines.length) * 1.5 + 'em';
+            }
+            function download(transparent) {
+                const svgElement = document.querySelector('svg');
+                const svg = (new XMLSerializer).serializeToString(svgElement);
+
+                const scale = 10; 
+                const canvasWidth = svgElement.width.baseVal.value * scale;
+                const canvasHeight = svgElement.height.baseVal.value * scale;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext('2d');
+                if (!transparent) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                }
+
+                const img = new Image();
+                img.onload = function () {
+                    ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL('image/png');
+                    a.download = 'kobe_numbers.png';
+                    a.click();
+                };
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            }
+            document.getElementById('download').onclick = () => {
+                download(false);
+            }
+            document.getElementById('downloadt').onclick = () => {
+                download(true);
+            }
+            document.getElementById('compile').onclick = () => compile(input.value);
+            compile(input.value);
+        });
+    </script>
+</body>
+
+</html>
