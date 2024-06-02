@@ -106,9 +106,9 @@
     </footer>
     <script>
         const input = document.getElementById('input');
-        input.value = '#set align(center)\n123';
+        input.value = '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮';
         document.getElementById('pagewidth').value = '30cm';
-        document.getElementById('textsize').value = '3em';
+        document.getElementById('textsize').value = '4em';
         document.getElementById('parleading').value = '4em';
         document.getElementById('typst').addEventListener('load', async function () {
             const templateReq = await fetch('kobe_numbers.typ')
@@ -134,7 +134,7 @@
                 const parLeading = document.getElementById('parleading').value;
                 $typst.svg({
                     mainContent: template + `\n\n#show: kobe_numbers
-                    #set page(height: auto, width: ${pageWidth}, margin: 2in)
+                    #set page(height: auto, width: ${pageWidth}, margin: 1in)
                     #set par(leading: ${parLeading})
                     #set text(size: ${textSize})
                     ` + mainContent
