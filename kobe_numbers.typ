@@ -18,18 +18,18 @@
   "24": ($24$, false),
 )
 
-#let find(x, pair: false) = {
+#let find(x) = {
   if map.at(str(x), default: none) != none {
     return map.at(str(x))
   }
   let h = calc.floor(calc.sqrt(x))
   if x - h * h == 0 {
-    let (a, na) = find(h, pair: true)
+    let (a, na) = find(h)
     let pa = if na { "(pa)" } else { "pa" }
     (eval(pa + "^2", mode: "math", scope: (pa: a)), true)
   } else {
-    let (a, na) = find(h, pair: true)
-    let (b, nb) = find(x - h * h, pair: true)
+    let (a, na) = find(h)
+    let (b, nb) = find(x - h * h)
     let pa = if na { "(pa)" } else { "pa" }
     let pb = if nb { "(pb)" } else { "pb" }
     (eval(pa + "^2 + " + pb, mode: "math", scope: (pa: a, pb: b)), true)
@@ -41,9 +41,17 @@
   show "4": H("kobe/4.png")
   show "24": H("kobe/24.png")
   show "8": H("kobe/8.png")
-  show regex("\d+"): it => {
-    set text(10pt)  
-    box(find(int(it.text)).at(0))
+  show regex("-{0,1}\d+"): it => {
+    if it.text.at(0) == "-" {
+      let (a, na) = find(int(it.text.slice(1)))
+      if na {
+        box(eval("-(pa)", mode: "math", scope: (pa: a)))
+      } else {
+        box("-" + a)
+      }
+    } else {
+      box(find(int(it.text)).at(0))
+    }
   }
   body
 }
