@@ -171,7 +171,7 @@
     <script>
         const rawFetch = fetch
         window.fetch = async function (url, options) {
-            if (url.endsWith('.wasm') || url.endsWith('.ttf') || url.endsWith('.otf')) {
+            if (window.caches && (url.endsWith('.wasm') || url.endsWith('.ttf') || url.endsWith('.otf'))) {
                 const cache = await caches.open('typst');
                 const cached = await cache.match(url);
                 if (cached) {
@@ -261,7 +261,7 @@
                 getModule: () =>
                     'https://unpkg.com/@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm',
             });
-            const compile = function (mainContent) {
+            const compile = function (mainContent, callback) {
                 const pageWidth = document.getElementById('pagewidth').value;
                 const textSize = document.getElementById('textsize').value;
                 const parLeading = document.getElementById('parleading').value;
@@ -278,6 +278,7 @@
                     mainContent: content 
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
+                    if (callback) callback()
                 }).catch(error => {
                     if (!error.matchAll) alert(error.message)
                     const regex = /message: \"(.*?)\"/g;
@@ -289,7 +290,7 @@
                     alert(s.length ? s.join('\n') : e)
                 })
             };
-            function download(transparent) {
+            function download(transparent, realdownload=true) {
                 const svgElement = document.querySelector('svg');
                 const svg = (new XMLSerializer).serializeToString(svgElement);
 
@@ -315,10 +316,13 @@
 
                     let delay = 0;
                     if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-                        delay = 300;
+                        delay = 500;
                     }
                     setTimeout(() => {
                         canvas.toBlob((blob) => {
+                            if (!realdownload) {
+                                return;
+                            }
                             const url = URL.createObjectURL(blob, { type: 'image/png' });
                             const a = document.createElement('a');
                             a.href = url;
@@ -345,7 +349,13 @@
                 }
             });
 
-            compile(input.value);
+            compile(input.value, () => {
+                if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+                    download(false, false);
+                }
+            });
+
+
         });
     </script>
 </body>
