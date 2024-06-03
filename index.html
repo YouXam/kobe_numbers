@@ -13,7 +13,7 @@
             width: 100%;
             top: 0;
             display: flex;
-            margin: 100px 0px;
+            margin: 50px 0px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -45,7 +45,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin-top: 100px;
+            margin-top: 50px;
         }
 
         input {
@@ -55,9 +55,9 @@
             overflow: hidden;
             width: 5ch;
             padding: 5px;
-            border-radius: 5px;
             appearance: none;
             margin: 0px 10px;
+            border-radius: 5px;
             border: 1px solid gray;
             margin: 3px 0px;
         }
@@ -74,18 +74,31 @@
             width: calc(80% + 20px);
             display: block;
         }
+
+        #loading {
+            height: 135px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            border-radius: 5px;
+            border: 0.5px solid gray;
+            padding: 20px 40px;
+        }
     </style>
 </head>
 
 <body>
+    <h1 style="text-align: center; margin: 50px 0px; margin-bottom: 0px">Kobe your numbers!</h1>
     <div id="content">
-        <div style="height: 305px; display: flex; flex-direction: column;justify-content: center; align-items: center; font-size: 2em;">
+        <div id="loading">
             <div>加载中...</div>
             <div style="font-size: 0.7em; margin-top: 20px;">首次加载可能需要较长时间</div>
         </div>
     </div>
     <div id="form">
-        <div style="width: 80%">
+        <div style="width: 80%; margin-bottom: 20px">
             <a href="javascript:void()" id="example1">示例 1</a>
             <a href="javascript:void()" id="example2">示例 2</a>
         </div>
@@ -105,8 +118,8 @@
         <button id="download">下载 png</button>
         <button id="downloadt">下载 png (透明背景)</button>
     </div>
-    <footer style="text-align: center; margin-top: 100px;">
-         <div>查看 <a href="https://typst.app/docs" target="_blank">Typst 文档</a> 以获取更多信息。</div>
+    <footer style="text-align: center; margin: 50px 0px;">
+        <div>查看 <a href="https://typst.app/docs" target="_blank">Typst 文档</a> 以获取更多信息。</div>
         <div style="margin-top: 10px;">GitHub: <a href="https://github.com/YouXam/kobe_numbers"
                 target="_blank">YouXam/kobe_numbers</a></div>
     </footer>
@@ -173,7 +186,7 @@
                 .replaceAll(`H("kobe`, `H("/kobe`);
 
             const cm = window.TypstCompileModule;
-            
+
             const fetchBackend = new cm.FetchAccessModel(location.pathname);
             $typst.use(TypstSnippet.withAccessModel(fetchBackend));
             $typst.setCompilerInitOptions({
@@ -209,7 +222,7 @@
 
                 const originalWidth = svgElement.width.baseVal.value;
                 const originalHeight = svgElement.height.baseVal.value;
-    
+
                 let scale = Math.min(10, Math.floor(Math.sqrt(16777216 / (originalWidth * originalHeight))));
                 const canvasWidth = svgElement.width.baseVal.value * scale;
                 const canvasHeight = svgElement.height.baseVal.value * scale;
