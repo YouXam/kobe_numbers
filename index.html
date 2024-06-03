@@ -48,12 +48,12 @@
             margin-top: 50px;
         }
 
-        input {
+        input:not([type="checkbox"]) {
             font-size: 1em;
             font-family: monospace;
             resize: none;
             overflow: hidden;
-            width: 5ch;
+            width: 10ch;
             padding: 5px;
             appearance: none;
             margin: 0px 10px;
@@ -86,6 +86,29 @@
             border: 0.5px solid gray;
             padding: 20px 40px;
         }
+
+
+        #setting {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        @media screen and (max-width: 500px) {
+            #setting {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+                gap: 0px;
+            }
+        }
+
+        #setting div label {
+            min-width: 12ch;
+            display:inline-block
+        }
+        #setting div label::after {
+            content: "：";
+        }
     </style>
 </head>
 
@@ -98,23 +121,39 @@
         </div>
     </div>
     <div id="form">
-        <div style="width: 80%; margin-bottom: 20px">
+        <div style="margin-bottom: 20px">
             <a href="javascript:void(0)" id="example1">示例 1</a>
+            <span style="margin: 0px 10px;">|</span>
             <a href="javascript:void(0)" id="example2">示例 2</a>
         </div>
-        <div style="width: 80%">
+        <div id="setting">
             <div>
-                <code>#set page(height: auto, width: <input id="pagewidth"/>)</code>
+                <label for="pagewidth">宽度</label>
+                <input id="pagewidth"/>
             </div>
             <div>
-                <code>#set text(size: <input id="textsize"/>)</code>
+                <label for="pagemargin">边距</label>
+                <input id="pagemargin"/>
             </div>
             <div>
-                <code>#set par(leading: <input id="parleading"/>)</code>
+                <label for="textsize">字体大小</label>
+                <input id="textsize"/>
+            </div>
+            <div>
+                <label for="parleading">行高</label>
+                <input id="parleading"/>
+            </div>
+            <div>
+                <label for="center">居中</label>
+                <input id="center" type="checkbox"/>
+            </div>
+            <div>
+                <label for="justify">两端对齐</label>
+                <input id="justify" type="checkbox"/>
             </div>
         </div>
         <textarea id="input"></textarea>
-        <button id="compile">生成</button>
+        <button id="compile">生成 (ctrl + enter)</button>
         <button id="download">下载 png</button>
         <button id="downloadt">下载 png (透明背景)</button>
     </div>
@@ -148,32 +187,40 @@
         }
         autoResize()
         input.addEventListener('input', autoResize);
-        input.value = '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮';
-        document.getElementById('pagewidth').value = '30cm';
-        document.getElementById('textsize').value = '4em';
-        document.getElementById('parleading').value = '4em';
-        document.getElementById('typst').addEventListener('load', async function () {
-            const examples = {
-                'example1': {
-                    'pagewidth': '30cm',
-                    'textsize': '4em',
-                    'parleading': '4em',
-                    'content': '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮'
-                },
-                'example2': {
-                    'pagewidth': '20cm',
-                    'textsize': '1em',
-                    'parleading': '3em',
-                    'content': '#set par(justify: true)\n你的素养很差，我现在每天玩原神都能赚150原石，每个月差不多5000原石的收入， 也就是现实生活中每个月5000美元的收入水平，换算过来最少也30000人民币，虽然我只有14岁，但是已经超越了中国绝大多数人(包括你)的水平，这便是原神给我的骄傲的资本。'
-                }
+        const examples = {
+            'example1': {
+                'pagewidth': 'auto',
+                'textsize': '4em',
+                'parleading': '4em',
+                'pagemargin': '1.5in',
+                'center': true,
+                'justify': false,
+                'content': '42 // 修改此处数字然后点击“生成”按钮'
+            },
+            'example2': {
+                'pagewidth': '20cm',
+                'textsize': '1.2em',
+                'parleading': '3em',
+                'pagemargin': '0.5in',
+                'center': false,
+                'justify': true,
+                'content': '你的素养很差，我现在每天玩原神都能赚150原石，每个月差不多5000原石的收入， 也就是现实生活中每个月5000美元的收入水平，换算过来最少也30000人民币，虽然我只有14岁，但是已经超越了中国绝大多数人(包括你)的水平，这便是原神给我的骄傲的资本。'
             }
-
+        }
+        function applySettings(options) {
+            document.getElementById('pagewidth').value = options.pagewidth;
+            document.getElementById('textsize').value = options.textsize;
+            document.getElementById('parleading').value = options.parleading;
+            document.getElementById('pagemargin').value = options.pagemargin;
+            document.getElementById('center').checked = options.center;
+            document.getElementById('justify').checked = options.justify;
+            input.value = options.content
+        }
+        applySettings(examples.example1)
+        document.getElementById('typst').addEventListener('load', async function () {
             for (const [id, example] of Object.entries(examples)) {
                 document.getElementById(id).onclick = () => {
-                    document.getElementById('pagewidth').value = example.pagewidth;
-                    document.getElementById('textsize').value = example.textsize;
-                    document.getElementById('parleading').value = example.parleading;
-                    input.value = example.content;
+                    applySettings(example)
                     autoResize();
                     compile(input.value);
                 }
@@ -206,15 +253,30 @@
                 const pageWidth = document.getElementById('pagewidth').value;
                 const textSize = document.getElementById('textsize').value;
                 const parLeading = document.getElementById('parleading').value;
-                $typst.svg({
-                    mainContent: template + `\n\n#show: kobe_numbers
-                    #set page(height: auto, width: ${pageWidth}, margin: 1in)
-                    #set par(leading: ${parLeading})
+                const pageMargin = document.getElementById('pagemargin').value;
+                const center = document.getElementById('center').checked;
+                const justify = document.getElementById('justify').checked;
+                const content = template + `\n\n#show: kobe_numbers
+                    #set page(height: auto, width: ${pageWidth}, margin: ${pageMargin})
+                    #set par(leading: ${parLeading}, justify: ${justify})
                     #set text(size: ${textSize})
+                    ${center ? "#set align(center)" : ""}
                     ` + mainContent
+                console.log(content)
+                $typst.svg({
+                    mainContent: content 
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
-                });
+                }).catch(error => {
+                    if (!error.matchAll) alert(error.message)
+                    const regex = /message: \"(.*?)\"/g;
+                    const matches = error.matchAll(regex);
+                    let s = []
+                    for (const match of matches) {
+                        s.push(match[1])
+                    }
+                    alert(s.length ? s.join('\n') : e)
+                })
             };
             function download(transparent) {
                 const svgElement = document.querySelector('svg');
@@ -259,6 +321,12 @@
                 download(true);
             }
             document.getElementById('compile').onclick = () => compile(input.value);
+            addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    compile(input.value);
+                }
+            });
+
             compile(input.value);
         });
     </script>
