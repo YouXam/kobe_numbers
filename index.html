@@ -99,8 +99,8 @@
     </div>
     <div id="form">
         <div style="width: 80%; margin-bottom: 20px">
-            <a href="javascript:void()" id="example1">示例 1</a>
-            <a href="javascript:void()" id="example2">示例 2</a>
+            <a href="javascript:void(0)" id="example1">示例 1</a>
+            <a href="javascript:void(0)" id="example2">示例 2</a>
         </div>
         <div style="width: 80%">
             <div>
@@ -126,12 +126,10 @@
     <script>
         const rawFetch = fetch
         window.fetch = async function (url, options) {
-            console.log(url)
             if (url.endsWith('.wasm') || url.endsWith('.ttf')) {
                 const cache = await caches.open('typst');
                 const cached = await cache.match(url);
                 if (cached) {
-                    console.log(url)
                     return cached;
                 }
                 const response = await rawFetch(url, options);
@@ -187,7 +185,9 @@
 
             const cm = window.TypstCompileModule;
 
-            const fetchBackend = new cm.FetchAccessModel(location.pathname);
+            const fetchBackend = new cm.FetchAccessModel(location.pathname, {
+                fullyCached: true
+            });
             $typst.use(TypstSnippet.withAccessModel(fetchBackend));
             $typst.setCompilerInitOptions({
                 beforeBuild: [
@@ -210,7 +210,7 @@
                     mainContent: template + `\n\n#show: kobe_numbers
                     #set page(height: auto, width: ${pageWidth}, margin: 1in)
                     #set par(leading: ${parLeading})
-                    #set text(size: ${textSize}, font: ("123asd", ))
+                    #set text(size: ${textSize})
                     ` + mainContent
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
