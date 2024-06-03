@@ -1,7 +1,7 @@
 
 
 #let iwidth = 1.8em
-#let H(path) = box(image(path), width: iwidth, height: iwidth, stroke: black + 0.2pt, baseline: 0.6em)
+#let H(path, left: 0em, right: 0em) = box(align(center)[#image(path)], width: iwidth, height: iwidth, stroke: black + 0.2pt, baseline: 0.6em, inset: (top: 0.1em, left: left, right: right))
 
 
 #let map = (
@@ -60,10 +60,10 @@
 }
 
 #let kobe_numbers(body) = {
-  show "2": H("kobe/2.png")
-  show "4": H("kobe/4.png")
-  show "24": H("kobe/24.png")
-  show "8": H("kobe/8.png")
+  show "2": H("kobe/2t.png", right: 0.5em)
+  show "4": H("kobe/4t.png", left: 0.5em)
+  show "24": H("kobe/24t.png")
+  show "8": H("kobe/8t.png")
   show par: set block(spacing: 3em)
   show regex("-{0,1}\d+"): it => {
     if it.text.at(0) == "-" {

@@ -268,13 +268,12 @@
                 const pageMargin = document.getElementById('pagemargin').value;
                 const center = document.getElementById('center').checked;
                 const justify = document.getElementById('justify').checked;
-                const content = template + `\n\n#show: kobe_numbers
-                    #set page(height: auto, width: ${pageWidth}, margin: ${pageMargin})
-                    #set par(leading: ${parLeading}, justify: ${justify})
-                    #set text(size: ${textSize})
-                    ${center ? "#set align(center)" : ""}
-                    ` + mainContent
-                console.log(content)
+                const content = template + '\n\n#show: kobe_numbers\n' +  
+                    `#set page(height: auto, width: ${pageWidth}, margin: ${pageMargin})\n` + 
+                    `#set par(leading: ${parLeading}, justify: ${justify})\n` + 
+                    `#set text(size: ${textSize})\n` + 
+                    `${center ? "#set align(center)" : ""}\n` + 
+                    mainContent
                 $typst.svg({
                     mainContent: content 
                 }).then(svg => {
@@ -313,16 +312,23 @@
                 const img = new Image();
                 img.onload = function () {
                     ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-                    canvas.toBlob((blob) => {
-                        const url = URL.createObjectURL(blob, { type: 'image/png' });
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'kobe_numbers.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 'image/png');
+
+                    let delay = 0;
+                    if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+                        delay = 300;
+                    }
+                    setTimeout(() => {
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob, { type: 'image/png' });
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'kobe_numbers.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }, 'image/png');
+                    }, delay);
                 };
                 img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
             }
