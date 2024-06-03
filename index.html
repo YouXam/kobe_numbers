@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="kobe/24.png" type="image/png" />
     <title>Kobe Numbers</title>
     <script type="module" src="https://unpkg.com/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js"
         id="typst"></script>
@@ -35,6 +36,7 @@
             appearance: none;
             border: 1px solid gray;
             margin-top: 3px;
+            margin-bottom: 5px;
         }
 
         #form {
@@ -127,7 +129,14 @@
             }
             return rawFetch(url, options)
         }
+
         const input = document.getElementById('input');
+        function autoResize() {
+            input.style.height = 'auto';
+            input.style.height = Math.max(input.scrollHeight, 142) + 'px';
+        }
+        autoResize()
+        input.addEventListener('input', autoResize);
         input.value = '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮';
         document.getElementById('pagewidth').value = '30cm';
         document.getElementById('textsize').value = '4em';
@@ -154,6 +163,7 @@
                     document.getElementById('textsize').value = example.textsize;
                     document.getElementById('parleading').value = example.parleading;
                     input.value = example.content;
+                    autoResize();
                     compile(input.value);
                 }
             }
@@ -193,10 +203,6 @@
                     document.getElementById('content').innerHTML = svg;
                 });
             };
-            input.oninput = () => {
-                const lines = input.value.split('\n');
-                input.style.height = Math.max(5, lines.length) * 1.5 + 'em';
-            }
             function download(transparent) {
                 const svgElement = document.querySelector('svg');
                 const svg = (new XMLSerializer).serializeToString(svgElement);
