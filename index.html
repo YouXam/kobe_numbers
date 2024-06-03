@@ -301,9 +301,10 @@
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
                     console.log('compile time:', new Date().getTime() - begin);
+                    if (callback) callback()
+                    currentExample = ''
                     document.getElementById('compileTimeValue').innerText = (new Date().getTime() - begin) + 'ms';
                     document.getElementById('compileTime').style.display = 'block';
-                    if (callback) callback()
                 }).catch(error => {
                     if (!error.matchAll) alert(error.message)
                     const regex = /message: \"(.*?)\"/g;
@@ -379,6 +380,7 @@
                 if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
                     download(false, false);
                 }
+                currentExample = ''
             });
 
 
