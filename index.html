@@ -165,11 +165,11 @@
     <script>
         const rawFetch = fetch
         window.fetch = async function (url, options) {
-            if (url.endsWith('.wasm') || url.endsWith('.ttf')) {
+            if (url.endsWith('.wasm') || url.endsWith('.ttf') || url.endsWith('.otf')) {
                 const cache = await caches.open('typst');
                 const cached = await cache.match(url);
                 if (cached) {
-                    return cached;
+                    return cached
                 }
                 const response = await rawFetch(url, options);
                 if (response.ok) {
@@ -179,7 +179,13 @@
             }
             return rawFetch(url, options)
         }
+        async function loadFont(src) {
+            const res = await fetch(src);
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
+        }
 
+        const font = loadFont('font.otf');
         const input = document.getElementById('input');
         function autoResize() {
             input.style.height = 'auto';
@@ -239,7 +245,7 @@
             $typst.setCompilerInitOptions({
                 beforeBuild: [
                     cm.preloadRemoteFonts([
-                        "font.otf"
+                        await font
                     ])
                 ],
                 getModule: () =>
