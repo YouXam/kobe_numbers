@@ -119,16 +119,25 @@
 </head>
 
 <body>
-    <h1 style="text-align: center; margin: 50px 0px; margin-bottom: 0px">Kobe your numbers!</h1>
+    <h1 style="text-align: center; margin: 50px 0px; margin-bottom: 0px">
+        Kobe your numbers!
+    </h1>
+    <div id="compileTime" style="text-align: center; margin: 10px 0px; display: none;">
+        <div>
+            编译时间：
+            <span id="compileTimeValue">0</span>
+        </div>
+    </div>
     <div id="content">
         <div id="loading">
             <div>加载中...</div>
-            <div style="font-size: 0.7em; margin-top: 20px;">首次加载可能需要较长时间</div>
+            <div style="font-size: 0.6em; margin-top: 20px;" id="loading_text">下载编译器...</div>
+            <div style="font-size: 0.4em; margin-top: 10px;">首次加载可能需要较长时间</div>
         </div>
     </div>
     <div id="form">
         <div style="margin-bottom: 20px">
-            <a href="javascript:void(0)" id="example1">示例 1</a>
+            <a id="example1">示例 1</a>
             <span style="margin: 0px 10px;">|</span>
             <a href="javascript:void(0)" id="example2">示例 2</a>
         </div>
@@ -185,6 +194,10 @@
             }
             return rawFetch(url, options)
         }
+        function updateLoadingText(text) {
+            if (document.getElementById('loading_text'))
+                document.getElementById('loading_text').innerText = text;
+        }
         async function loadFont(src) {
             const res = await fetch(src);
             const blob = await res.blob();
@@ -230,14 +243,19 @@
         }
         applySettings(examples.example1)
         document.getElementById('typst').addEventListener('load', async function () {
+            let currentExample = 'example1';
             for (const [id, example] of Object.entries(examples)) {
                 document.getElementById(id).onclick = () => {
+                    if (currentExample === id) return;
                     applySettings(example)
                     autoResize();
-                    compile(input.value);
+                    compile(input.value, () => {
+                        currentExample = id;
+                        document.getElementById(id).removeAttribute('href');
+                    });
                 }
             }
-
+            updateLoadingText('下载源码...');
             const templateReq = await fetch('kobe_numbers.typ')
             const template = (await templateReq.text())
                 .replaceAll(`H("kobe`, `H("/kobe`);
@@ -262,6 +280,10 @@
                     'https://unpkg.com/@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm',
             });
             const compile = function (mainContent, callback) {
+                const begin = new Date().getTime();
+                Object.entries(examples).forEach(([tid, example]) => {
+                    document.getElementById(tid).href = 'javascript:void(0)';
+                });
                 const pageWidth = document.getElementById('pagewidth').value;
                 const textSize = document.getElementById('textsize').value;
                 const parLeading = document.getElementById('parleading').value;
@@ -278,6 +300,9 @@
                     mainContent: content 
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
+                    console.log('compile time:', new Date().getTime() - begin);
+                    document.getElementById('compileTimeValue').innerText = (new Date().getTime() - begin) + 'ms';
+                    document.getElementById('compileTime').style.display = 'block';
                     if (callback) callback()
                 }).catch(error => {
                     if (!error.matchAll) alert(error.message)
@@ -348,8 +373,9 @@
                     compile(input.value);
                 }
             });
-
+            updateLoadingText('下载牢大...');
             compile(input.value, () => {
+                document.getElementById(currentExample).removeAttribute('href');
                 if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
                     download(false, false);
                 }
