@@ -41,6 +41,7 @@
   show "4": H("kobe/4.png")
   show "24": H("kobe/24.png")
   show "8": H("kobe/8.png")
+  show par: set block(spacing: 3em)
   show regex("-{0,1}\d+"): it => {
     if it.text.at(0) == "-" {
       let (a, na) = find(int(it.text.slice(1)))
