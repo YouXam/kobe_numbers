@@ -30,9 +30,9 @@
 #show par: set block(spacing: 3em)
 #set par(justify: true, leading: 3em)
 
--3 // 无法正确添加括号
+-5 // 无法正确添加括号
 
-a-3 // 正常
+a-5 // 正常
 ```
 
 ![](./demo/issue.png)
