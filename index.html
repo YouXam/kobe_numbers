@@ -84,6 +84,10 @@
     </div>
     <div id="form">
         <div style="width: 80%">
+            <a href="javascript:void()" id="example1">示例 1</a>
+            <a href="javascript:void()" id="example2">示例 2</a>
+        </div>
+        <div style="width: 80%">
             <div>
                 <code>#set page(height: auto, width: <input id="pagewidth"/>)</code>
             </div>
@@ -105,12 +109,55 @@
                 target="_blank">YouXam/kobe_numbers</a></div>
     </footer>
     <script>
+        const rawFetch = fetch
+        window.fetch = async function (url, options) {
+            console.log(url)
+            if (url.endsWith('.wasm') || url.endsWith('.ttf')) {
+                const cache = await caches.open('typst');
+                const cached = await cache.match(url);
+                if (cached) {
+                    console.log(url)
+                    return cached;
+                }
+                const response = await rawFetch(url, options);
+                if (response.ok) {
+                    cache.put(url, response.clone());
+                }
+                return response
+            }
+            return rawFetch(url, options)
+        }
         const input = document.getElementById('input');
         input.value = '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮';
         document.getElementById('pagewidth').value = '30cm';
         document.getElementById('textsize').value = '4em';
         document.getElementById('parleading').value = '4em';
         document.getElementById('typst').addEventListener('load', async function () {
+            const examples = {
+                'example1': {
+                    'pagewidth': '30cm',
+                    'textsize': '4em',
+                    'parleading': '4em',
+                    'content': '#set align(center)\n42 // 修改此处数字然后点击“生成”按钮'
+                },
+                'example2': {
+                    'pagewidth': '20cm',
+                    'textsize': '1em',
+                    'parleading': '3em',
+                    'content': '#set par(justify: true)\n你的素养很差，我现在每天玩原神都能赚150原石，每个月差不多5000原石的收入， 也就是现实生活中每个月5000美元的收入水平，换算过来最少也30000人民币，虽然我只有14岁，但是已经超越了中国绝大多数人(包括你)的水平，这便是原神给我的骄傲的资本。'
+                }
+            }
+
+            for (const [id, example] of Object.entries(examples)) {
+                document.getElementById(id).onclick = () => {
+                    document.getElementById('pagewidth').value = example.pagewidth;
+                    document.getElementById('textsize').value = example.textsize;
+                    document.getElementById('parleading').value = example.parleading;
+                    input.value = example.content;
+                    compile(input.value);
+                }
+            }
+
             const templateReq = await fetch('kobe_numbers.typ')
             const template = (await templateReq.text())
                 .replaceAll(`H("kobe`, `H("/kobe`);
@@ -119,8 +166,12 @@
             
             const fetchBackend = new cm.FetchAccessModel(location.pathname);
             $typst.use(TypstSnippet.withAccessModel(fetchBackend));
-
             $typst.setCompilerInitOptions({
+                beforeBuild: [
+                    cm.preloadRemoteFonts([
+                        "font.otf"
+                    ])
+                ],
                 getModule: () =>
                     'https://unpkg.com/@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm',
             });
@@ -136,7 +187,7 @@
                     mainContent: template + `\n\n#show: kobe_numbers
                     #set page(height: auto, width: ${pageWidth}, margin: 1in)
                     #set par(leading: ${parLeading})
-                    #set text(size: ${textSize})
+                    #set text(size: ${textSize}, font: ("123asd", ))
                     ` + mainContent
                 }).then(svg => {
                     document.getElementById('content').innerHTML = svg;
