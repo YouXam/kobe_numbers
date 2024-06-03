@@ -18,3 +18,6 @@
 
 ![](./demo.png)
 
+## 已知的问题
+
+对于负数，如果负号前为行首或者空白，无法正常转换，该问题是由于 Typst 的 bug([typst issue #86](https://github.com/typst/typst/issues/86))，在上游修复之前无法解决该问题。
