@@ -173,11 +173,49 @@
         <button id="downloadt">下载 png (透明背景)</button>
     </div>
     <footer style="text-align: center; margin: 50px 0px;">
-        <div>查看 <a href="https://typst.app/docs" target="_blank">Typst 文档</a> 以获取更多信息。</div>
+        <div><a href="javascript:void(0)" id="share">复制分享链接</a></div>
+        <div style="margin-top: 10px;">查看 <a href="https://typst.app/docs" target="_blank">Typst 文档</a> 以获取更多信息。</div>
         <div style="margin-top: 10px;">GitHub: <a href="https://github.com/YouXam/kobe_numbers"
                 target="_blank">YouXam/kobe_numbers</a></div>
     </footer>
     <script>
+        async function compressData(inputData) {
+            const cs = new CompressionStream('gzip');
+            const writer = cs.writable.getWriter();
+            writer.write(inputData);
+            writer.close();
+            const compressedStream = new Response(cs.readable).arrayBuffer();
+            return new Uint8Array(await compressedStream);
+        }
+
+        async function decompressData(compressedData) {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            writer.write(compressedData);
+            writer.close();
+            const decompressedStream = new Response(ds.readable).arrayBuffer();
+            return new Uint8Array(await decompressedStream);
+        }
+
+        function base64ToBytes(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        function bytesToBase64(bytes) {
+            let binaryString = '';
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binaryString += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binaryString);
+        }
+
         const rawFetch = fetch
         window.fetch = async function (url, options) {
             if (window.caches && (url.endsWith('.wasm') || url.endsWith('.ttf') || url.endsWith('.otf'))) {
@@ -204,6 +242,7 @@
             return URL.createObjectURL(blob);
         }
 
+        let example1 = true
         const font = loadFont('font.otf');
         const input = document.getElementById('input');
         function autoResize() {
@@ -241,7 +280,74 @@
             document.getElementById('justify').checked = options.justify;
             input.value = options.content
         }
-        applySettings(examples.example1)
+        async function share() {
+            const pageWidth = document.getElementById('pagewidth').value;
+            const textSize = document.getElementById('textsize').value;
+            const parLeading = document.getElementById('parleading').value;
+            const pageMargin = document.getElementById('pagemargin').value;
+            const center = document.getElementById('center').checked;
+            const justify = document.getElementById('justify').checked;
+            const mainContent = input.value;
+            const data = {
+                p: pageWidth == examples.example1.pagewidth ? undefined : pageWidth,
+                t: textSize == examples.example1.textsize ? undefined : textSize,
+                a: parLeading == examples.example1.parleading ? undefined : parLeading,
+                c: center == examples.example1.center ? undefined : (center ? 1 : 0),
+                j: justify == examples.example1.justify ? undefined : (justify ? 1 : 0),
+                g: pageMargin == examples.example1.pagemargin ? undefined : pageMargin,
+                m: mainContent == examples.example1.content ? undefined : mainContent
+            };
+            if (Object.values(data).every(v => v === undefined)) {
+                history.replaceState(null, '', location.pathname);
+            } else {
+                try {
+                    history.replaceState(null, '', '?c=' + encodeURIComponent(bytesToBase64(await compressData(new TextEncoder().encode(JSON.stringify(data))))));
+                } catch (e) {
+                    console.error(e);
+                    return
+                }
+            }
+
+            navigator.clipboard.writeText(location.href);
+            document.getElementById('share').innerText = '已复制';
+            setTimeout(() => {
+                document.getElementById('share').innerText = '复制分享链接';
+            }, 1000);
+        }
+        document.getElementById('share').addEventListener('click', share);
+        const shortKey = {
+            'p': 'pagewidth',
+            't': 'textsize',
+            'a': 'parleading',
+            'c': 'center',
+            'j': 'justify',
+            'g': 'pagemargin',
+            'm': 'content'
+        }
+        ;(async function () {
+            try {
+                if (location.search) {
+                    const data = new URLSearchParams(location.search).get('c');
+                    if (data) {
+                        const settings = JSON.parse(new TextDecoder().decode(await decompressData(base64ToBytes(data))));
+                        const defaultSetting = { ...examples.example1 };
+                        const result = {}
+                        for (const key of Object.keys(settings)) {
+                            if (settings[key] !== undefined) {
+                                result[shortKey[key]] = typeof defaultSetting[shortKey[key]] === 'boolean' ? settings[key] === 1 : settings[key];
+                            }
+                        }
+                        applySettings(result);
+                        example1 = false;
+                    }
+                } else {
+                    applySettings(examples.example1)
+                }
+            } catch (e) {
+                console.error(e);
+                history.replaceState(null, '', location.pathname);
+            }
+        })();   
         document.getElementById('typst').addEventListener('load', async function () {
             let currentExample = 'example1';
             for (const [id, example] of Object.entries(examples)) {
@@ -295,7 +401,7 @@
                     `#set par(leading: ${parLeading}, justify: ${justify})\n` + 
                     `#set text(size: ${textSize})\n` + 
                     `${center ? "#set align(center)" : ""}\n` + 
-                    mainContent
+                    mainContent;
                 $typst.svg({
                     mainContent: content 
                 }).then(svg => {
@@ -376,14 +482,15 @@
             });
             updateLoadingText('下载牢大...');
             compile(input.value, () => {
-                document.getElementById(currentExample).removeAttribute('href');
+                if (example1) {
+                    document.getElementById(currentExample).removeAttribute('href');
+                    currentExample = ''
+                }
                 if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
                     download(false, false);
                 }
-                currentExample = ''
+                
             });
-
-
         });
     </script>
 </body>
